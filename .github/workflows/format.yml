@@ -1,0 +1,27 @@
+name: lint
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+jobs:
+  shfmt-check:
+    name: "Formatting check with shfmt"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.18"
+
+      - name: Use shfmt
+        run: |
+          go install mvdan.cc/sh/v3/cmd/shfmt@v3.6
+
+      # https://google.github.io/styleguide/shellguide.html
+      - name: Check formatting
+        run: make style-sh
