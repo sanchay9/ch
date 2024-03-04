@@ -4,20 +4,15 @@ SCRIPT_NAME=$(basename "$0")
 
 PORT=10043
 NC='\033[0m'
-UBLACK='\033[4;30m'
 BLACK='\033[0;30m'
-BRED='\033[1;31m'
-BGREEN='\033[1;32m'
 ON_GREEN='\033[42m'
 ON_RED='\033[41m'
-ON_WHITE='\033[47m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
-WHITE='\033[0;37m'
 
 command -v jq &>/dev/null || {
     echo "jq not found!"
