@@ -1,7 +1,5 @@
 #!/bin/bash
 
-SCRIPT_NAME=$(basename "$0")
-
 PORT=10043
 NC='\033[0m'
 BLACK='\033[0;30m'
@@ -53,7 +51,7 @@ run_samples() {
     done
 
     if [ ${#input_files[@]} -eq 0 ]; then
-        echo -e "\n${BLACK}${ON_RED} no test files, try ${SCRIPT_NAME} get ${NC}\n"
+        echo -e "\n${BLACK}${ON_RED} no test files found ${NC}\n"
         exit 1
     fi
 
@@ -214,7 +212,7 @@ elif [ "$1" = "validate" ]; then
 
     echo -e "${GREEN}Passed some 100 random tests${NC}"
 elif [ "$1" = "get" ]; then
-    socat -u tcp-l:$PORT,reuseaddr,fork system:"${SCRIPT_NAME} process" &
+    socat -u tcp-l:$PORT,reuseaddr,fork system:"$(basename "$0") process" &
     pid=$!
 
     echo -e "${PURPLE}Press ESC to quit${NC}"
