@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  shellcheck:
     name: ShellCheck
     runs-on: ubuntu-latest
     steps:
