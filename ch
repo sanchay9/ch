@@ -1,40 +1,55 @@
 #!/bin/bash
 
+SCRIPT_NAME=$(basename "$0")
+
 PORT=10043
 NC='\033[0m'
+UBLACK='\033[4;30m'
 BLACK='\033[0;30m'
+BRED='\033[1;31m'
+BGREEN='\033[1;32m'
 ON_GREEN='\033[42m'
 ON_RED='\033[41m'
+ON_WHITE='\033[47m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
+WHITE='\033[0;37m'
 
-command -v jq &>/dev/null || {
-    echo "jq not found!"
-    exit 1
-}
-command -v socat &>/dev/null || {
-    echo "jq not found!"
-    exit 1
-}
-command -v fd &>/dev/null || {
-    echo "fd not found!"
-    exit 1
-}
+# command -v jq &>/dev/null || {
+#     echo "jq not found!"
+#     exit 1
+# }
+# command -v socat &>/dev/null || {
+#     echo "jq not found!"
+#     exit 1
+# }
+# command -v fd &>/dev/null || {
+#     echo "fd not found!"
+#     exit 1
+# }
 
 compile() {
-    cmd="g++ -std=c++20 \
-        -I${HOME}/code/include \
+    local source_file="$1.cpp"
+    local output_file="${HOME}/code/bin/$1"
+
+    if [[ ! -f "$source_file" ]]; then
+        echo -e "\n${BLACK}${ON_RED} file not found: ${source_file} ${NC}\n"
+        return 1
+    fi
+
+    g++ -std=c++20 \
+        -I"${HOME}/code/include" \
         -DLOCAL \
         -O2 -Wall -Wextra -Wshadow -Wconversion -Wfloat-equal -Wduplicated-cond -Wlogical-op -Wshift-overflow=2 \
         -D_GLIBCXX_DEBUG -fsanitize=address -fsanitize=undefined -fno-sanitize-recover \
-        -o $1 $1.cpp"
+        -o "$output_file" "$source_file"
 
-    if ! $cmd; then
-        echo -e "\n${BLACK}${ON_RED} failed to compile ${1}.cpp ${NC}\n"
+    if [[ $? -ne 0 ]]; then
+        echo -e "\n${BLACK}${ON_RED} failed to compile ${source_file} ${NC}\n"
         exit 1
     fi
 }
@@ -51,7 +66,7 @@ run_samples() {
     done
 
     if [ ${#input_files[@]} -eq 0 ]; then
-        echo -e "\n${BLACK}${ON_RED} no test files found ${NC}\n"
+        echo -e "\n${BLACK}${ON_RED} no test files, try ${SCRIPT_NAME} get ${NC}\n"
         exit 1
     fi
 
@@ -60,42 +75,33 @@ run_samples() {
         exit 1
     fi
 
+    compile "$1"
+
     num_tests=${#input_files[@]}
 
-    all_tests_passed=0
     for ((j = 1; j <= num_tests; j++)); do
         input="${input_files[$j - 1]}"
         expected="${expected_files[$j - 1]}"
         output="${1}_output_${j}"
-        error="${1}_error_${j}"
 
-        ./"$1" <"$input" >"$output" 2>"$error"
+        ~/code/bin/"$1" <"$input" >"$output" 2>&1
 
         echo ''
         if cmp -s "$expected" "$output"; then
-            echo -e "${BLACK}${ON_GREEN} Test #$j: Passed  ${NC}"
-            all_tests_passed=$((all_tests_passed + 1))
+            echo -e "${BLACK}${ON_GREEN} Test #$j: Passed ${NC}"
         else
-            echo -e "${BLACK}${ON_RED} Test #$j: Failed  ${NC}"
+            echo -e "${BLACK}${ON_RED} Test #$j: Failed ${NC}"
             echo -e "${BLUE}input:${NC}"
             cat "$input"
             echo -e "${BLUE}expected:${NC}"
             cat "$expected"
             echo -e "${BLUE}output:${NC}"
             cat "$output"
-            if [ -s "$error" ]; then
-                echo -e "${BLUE}error:${NC}"
-                cat "$error"
-            fi
         fi
     done
+    rm "$output"
 
     echo ''
-    # if [ "$all_tests_passed" = "$num_tests" ]; then
-    #     echo -e "${BGREEN}All tests passed!! \n${NC}"
-    # else
-    #     echo -e "${BRED}Samples Failed :( \n${NC}"
-    # fi
 }
 
 process_req() {
@@ -119,6 +125,10 @@ process_req() {
     echo -e "${GREEN}Files Prepared for ${name}${NC}"
 }
 
+reload_nvim() {
+    nvim --server "$1" --remote-send "<cmd>checktime<cr>" >/dev/null &
+}
+
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "h" ] || [ "$1" = "help" ]; then
     echo -e "Usage: $(basename "$0") <command> [arguments]\n"
 
@@ -132,25 +142,33 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "h" ] || [ "$1" = "help" ]
     exit 0
 fi
 
-if [ "$1" = "process" ]; then
-    echo ''
+case "$1" in
+"process")
     process_req "$(tee)"
-elif [ "$1" = "samples" ]; then
-    echo ''
-    compile "$2"
+    ;;
+"samples")
     run_samples "$2"
-elif [ "$1" = "run" ]; then
-    echo ''
+
+    if [ -n "$3" ]; then
+        reload_nvim "$3"
+    fi
+    ;;
+"run")
     compile "$2"
-    ./"$2" <~/code/lab/input >~/code/lab/output
+
+    input_file=~/code/bin/input
+    output_file=~/code/bin/output
+    if [[ ! -f "$input_file" ]] || [[ ! -f "$output_file" ]]; then
+        touch ~/code/bin/input ~/code/bin/output
+    fi
+    ~/code/bin/"$2" <$input_file >$output_file
     echo -e "\n${BLACK}${ON_GREEN} run success ${NC}\n"
 
-    for sock in "$XDG_RUNTIME_DIR"/nvim.*.0; do
-        if [ -e "$sock" ]; then
-            nvim --server "$sock" --remote-send "<cmd>checktime<CR>" >/dev/null &
-        fi
-    done
-elif [ "$1" = "clean" ]; then
+    if [ -n "$3" ]; then
+        reload_nvim "$3"
+    fi
+    ;;
+"clean")
     fd --max-depth=1 -tx
     while read -p "go ahead? " -s -r -n1 key; do
         if [[ "$key" =~ ^([yY])$ ]]; then
@@ -161,11 +179,13 @@ elif [ "$1" = "clean" ]; then
         fi
         exit 0
     done
-elif [ "$1" = "interact" ]; then
+    ;;
+"interact")
     compile "$2"
     echo -e "${YELLOW}Start Interaction${NC}"
     ./"$2"
-elif [ "$1" = "stress" ]; then
+    ;;
+"stress")
     compile "$2"
     compile "$2"_gen
     compile "$2"_slow
@@ -187,7 +207,8 @@ elif [ "$1" = "stress" ]; then
     done
 
     echo -e "${GREEN}Passed some 100 random tests 󰡕 ${NC}"
-elif [ "$1" = "validate" ]; then
+    ;;
+"validate")
     compile "$2"
     compile "$2"_gen
     compile "$2"_val
@@ -211,8 +232,9 @@ elif [ "$1" = "validate" ]; then
     done
 
     echo -e "${GREEN}Passed some 100 random tests${NC}"
-elif [ "$1" = "get" ]; then
-    socat -u tcp-l:$PORT,reuseaddr,fork system:"$(basename "$0") process" &
+    ;;
+"get")
+    socat -u tcp-l:$PORT,reuseaddr,fork system:"${SCRIPT_NAME} process" &
     pid=$!
 
     echo -e "${PURPLE}Press ESC to quit${NC}"
@@ -222,4 +244,8 @@ elif [ "$1" = "get" ]; then
             exit 0
         fi
     done
-fi
+    ;;
+*)
+    echo "Unknown command: $command"
+    ;;
+esac
