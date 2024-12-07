@@ -45,7 +45,7 @@ compile() {
         -I"${HOME}/code/include" \
         -DLOCAL \
         -O2 -Wall -Wextra -Wshadow -Wconversion -Wfloat-equal -Wduplicated-cond -Wlogical-op -Wshift-overflow=2 \
-        -D_GLIBCXX_DEBUG -fsanitize=address -fsanitize=undefined -fno-sanitize-recover \
+        -D_GLIBCXX_DEBUG -fno-sanitize-recover \
         -o "$output_file" "$source_file"
 
     if [[ $? -ne 0 ]]; then
