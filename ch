@@ -19,18 +19,15 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 WHITE='\033[0;37m'
 
-# command -v jq &>/dev/null || {
-#     echo "jq not found!"
-#     exit 1
-# }
-# command -v socat &>/dev/null || {
-#     echo "jq not found!"
-#     exit 1
-# }
-# command -v fd &>/dev/null || {
-#     echo "fd not found!"
-#     exit 1
-# }
+command -v jq &>/dev/null || {
+    echo "error: jq not found!"
+    exit 1
+}
+
+command -v socat &>/dev/null || {
+    echo "error: socat not found!"
+    exit 1
+}
 
 compile() {
     local source_file="$1.cpp"
@@ -44,8 +41,8 @@ compile() {
     g++ -std=c++20 \
         -I"${HOME}/code/include" \
         -DLOCAL \
+        -D_GLIBCXX_DEBUG \
         -O2 -Wall -Wextra -Wshadow -Wconversion -Wfloat-equal -Wduplicated-cond -Wlogical-op -Wshift-overflow=2 \
-        -D_GLIBCXX_DEBUG -fno-sanitize-recover \
         -o "$output_file" "$source_file"
 
     if [[ $? -ne 0 ]]; then
@@ -167,18 +164,6 @@ case "$1" in
     if [ -n "$3" ]; then
         reload_nvim "$3"
     fi
-    ;;
-"clean")
-    fd --max-depth=1 -tx
-    while read -p "go ahead? " -s -r -n1 key; do
-        if [[ "$key" =~ ^([yY])$ ]]; then
-            fd --max-depth=1 -tx -x rm
-            echo -e "\n${GREEN}delete success${NC}"
-        else
-            echo -e "\n${RED}exiting...${NC}"
-        fi
-        exit 0
-    done
     ;;
 "interact")
     compile "$2"
