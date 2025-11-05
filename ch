@@ -156,7 +156,7 @@ case "$1" in
     input_file=~/code/bin/input
     output_file=~/code/bin/output
     if [[ ! -f "$input_file" ]] || [[ ! -f "$output_file" ]]; then
-        touch ~/code/bin/input ~/code/bin/output
+        touch "$input_file" "$output_file"
     fi
     ~/code/bin/"$2" <$input_file >$output_file
     echo -e "\n${BLACK}${ON_GREEN} run success ${NC}\n"
