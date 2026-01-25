@@ -107,28 +107,27 @@ run_samples() {
         printf '%s' "$test" | jq -j '.output' >"$expected_file"
 
         if ! ./a.out <"$input_file" >"$output_file" 2>&1; then
-            echo -e "\n${BLACK}${ON_RED} Test #$index: Runtime Error ${NC}"
+            echo -e "${BLACK}${ON_RED} Test #$index: Runtime Error ${NC}"
             ((failed++)) || true
         elif cmp -s "$expected_file" "$output_file" >/dev/null; then
-            echo -e "\n${BLACK}${ON_GREEN} Test #$index: Passed ${NC}"
+            echo -e "${BLACK}${ON_GREEN} Test #$index: Passed ${NC}"
             ((passed++)) || true
         else
-            echo -e "\n${BLACK}${ON_BLUE}input:${NC}"
+            echo -e "${BLACK}${ON_RED} Test #$index: Failed ${NC}"
+            echo -e "${BLACK}${ON_BLUE}input:${NC}"
             cat "$input_file"
             echo -e "${BLACK}${ON_BLUE}expected:${NC}"
             cat "$expected_file"
             echo -e "${BLACK}${ON_BLUE}output:${NC}"
             cat "$output_file"
-            echo -e "\n${BLACK}${ON_RED} Test #$index: Failed ${NC}"
             ((failed++)) || true
         fi
+        printf '\n'
 
         ((index++)) || true
     done < <(jq -c '.tests[]' "$metadata_file")
 
     rm -f a.out
-
-    local total=$((passed + failed))
 }
 
 process_req() {
@@ -148,7 +147,7 @@ process_req() {
     if [[ "$group" == "CSES - CSES Problem Set" ]]; then
         name=$(echo "$name" | tr ' ' '_')
     else
-        name=$(echo "$name" | cut -c1 | tr '[:upper:]' '[:lower:]')
+        name=$(echo "$name" | grep -oE '^[A-Za-z][0-9]*' | tr '[:upper:]' '[:lower:]')
     fi
 
     local metadata_file=".${name}.json"
