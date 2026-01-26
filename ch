@@ -39,7 +39,7 @@ CYAN='\033[0;36m'
 export NC BLACK ON_GREEN ON_RED ON_BLUE GREEN YELLOW CYAN
 export PORT PROCESSED TEMPLATE_DIR
 
-COMMON_FLAGS="-std=c++20 -DLOCAL -D_GLIBCXX_DEBUG -O2 -Wall -Wextra -Wshadow -Wconversion -Wfloat-equal"
+COMMON_FLAGS="-std=c++23 -DLOCAL -D_GLIBCXX_DEBUG -O2 -Wall -Wextra -Wshadow -Wconversion -Wfloat-equal"
 if g++ --version 2>&1 | grep -q "GCC"; then
     COMMON_FLAGS+=" -Wduplicated-cond -Wlogical-op -Wshift-overflow=2"
 fi
