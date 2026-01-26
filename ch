@@ -85,9 +85,7 @@ compile() {
 
 run_samples() {
     local target="${1%.cpp}"
-    local problem_id
-    problem_id=$(echo "$target" | cut -c1 | tr '[:upper:]' '[:lower:]')
-    local metadata_file=".${problem_id}.json"
+    local metadata_file=".${target}.json"
 
     if [[ ! -f "$metadata_file" ]]; then
         throw_err "no metadata file found, try ${SCRIPT_NAME} get"
@@ -154,17 +152,18 @@ process_req() {
     if [[ -f "$metadata_file" ]]; then
         echo "${YELLOW}Metadata for problem ${name} already exists, backing up...${NC}" >&2
         mv "$metadata_file" "${metadata_file}.bak"
-        mv "${name}.cpp" "${name}.cpp.bak" 2>/dev/null
     fi
-
     printf '%s' "$json" >"$metadata_file"
     jq 'del(.batch, .languages)' "$metadata_file" >"${metadata_file}.tmp" && mv "${metadata_file}.tmp" "$metadata_file"
 
+    if [[ -f "${name}.cpp" ]]; then
+        mv "${name}.cpp" "${name}.cpp.bak" 2>/dev/null
+    fi
     test_type=$(printf '%s' "$json" | jq -r '.testType // "multi"')
     if [[ "$test_type" == "single" ]]; then
-        cp "${TEMPLATE_DIR}/templatesingle.cpp" "${name}.cpp"
+        cp "${TEMPLATE_DIR}/single.cpp" "${name}.cpp"
     else
-        cp "${TEMPLATE_DIR}/templatemulti.cpp" "${name}.cpp"
+        cp "${TEMPLATE_DIR}/multi.cpp" "${name}.cpp"
     fi
 
     # Handle batch processing with proper locking
