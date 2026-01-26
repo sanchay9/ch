@@ -135,11 +135,11 @@ process_req() {
 
     name=$(printf '%s' "$json" | jq -r '.name')
     if [[ -z "$name" ]]; then
-        echo "${YELLOW}Warning: Could not parse problem name${NC}" >&2
+        echo -e "${YELLOW}Warning: Could not parse problem name${NC}" >&2
         return 1
     fi
 
-    echo "${GREEN}Parsed Problem: ${name}${NC}" >&2
+    echo -e "${GREEN}Parsed Problem: ${name}${NC}" >&2
     group=$(printf '%s' "$json" | jq -r '.group // empty')
 
     if [[ "$group" == "CSES - CSES Problem Set" ]]; then
@@ -150,13 +150,14 @@ process_req() {
 
     local metadata_file=".${name}.json"
     if [[ -f "$metadata_file" ]]; then
-        echo "${YELLOW}Metadata for problem ${name} already exists, backing up...${NC}" >&2
+        echo -e "${YELLOW}Metadata for problem ${name} already exists, backing up...${NC}" >&2
         mv "$metadata_file" "${metadata_file}.bak"
     fi
     printf '%s' "$json" >"$metadata_file"
     jq 'del(.batch, .languages)' "$metadata_file" >"${metadata_file}.tmp" && mv "${metadata_file}.tmp" "$metadata_file"
 
     if [[ -f "${name}.cpp" ]]; then
+        echo -e "${YELLOW}Solution file ${name}.cpp already exists, backing up...${NC}" >&2
         mv "${name}.cpp" "${name}.cpp.bak" 2>/dev/null
     fi
     test_type=$(printf '%s' "$json" | jq -r '.testType // "multi"')
