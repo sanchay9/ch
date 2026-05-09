@@ -17,6 +17,8 @@ readonly PROCESSED="/tmp/ch_processed_$$"
 
 readonly ITERS=100
 
+readonly SOLUTION_SUFFIXES=(dfs bfs iterative recursive brute greedy dp)
+
 # Create temp directory and ensure cleanup
 TMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ch.XXXXXX")
 trap 'cleanup' EXIT INT TERM
@@ -85,7 +87,17 @@ compile() {
 
 run_samples() {
     local target="${1%.cpp}"
-    local metadata_file=".${target}.json"
+    local problem="$target"
+    if [[ "$target" == *_* ]]; then
+        local suffix="${target##*_}"
+        for allowed in "${SOLUTION_SUFFIXES[@]}"; do
+            if [[ "$suffix" == "$allowed" ]]; then
+                problem="${target%_*}"
+                break
+            fi
+        done
+    fi
+    local metadata_file=".${problem}.json"
 
     if [[ ! -f "$metadata_file" ]]; then
         throw_err "no metadata file found, try ${SCRIPT_NAME} get"
