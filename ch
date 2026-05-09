@@ -17,7 +17,7 @@ readonly PROCESSED="/tmp/ch_processed_$$"
 
 readonly ITERS=100
 
-readonly SOLUTION_SUFFIXES=(dfs bfs iterative recursive brute greedy dp)
+readonly SOLUTION_SUFFIXES=(dfs bfs iterative recursive brute greedy dp full)
 
 # Create temp directory and ensure cleanup
 TMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ch.XXXXXX")
